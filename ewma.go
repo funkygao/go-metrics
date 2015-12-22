@@ -87,8 +87,9 @@ type StandardEWMA struct {
 // Rate returns the moving average rate of events per second.
 func (a *StandardEWMA) Rate() float64 {
 	a.mutex.Lock()
-	defer a.mutex.Unlock()
-	return a.rate * float64(1e9)
+	r := a.rate * float64(1e9)
+	a.mutex.Unlock()
+	return r
 }
 
 // Snapshot returns a read-only copy of the EWMA.
@@ -103,13 +104,13 @@ func (a *StandardEWMA) Tick() {
 	atomic.AddInt64(&a.uncounted, -count)
 	instantRate := float64(count) / float64(5e9)
 	a.mutex.Lock()
-	defer a.mutex.Unlock()
 	if a.init {
 		a.rate += a.alpha * (instantRate - a.rate)
 	} else {
 		a.init = true
 		a.rate = instantRate
 	}
+	a.mutex.Unlock()
 }
 
 // Update adds n uncounted events.

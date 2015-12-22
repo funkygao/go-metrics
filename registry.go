@@ -68,8 +68,9 @@ func (r *StandardRegistry) Each(f func(string, interface{})) {
 // Get the metric by the given name or nil if none is registered.
 func (r *StandardRegistry) Get(name string) interface{} {
 	r.mutex.Lock()
-	defer r.mutex.Unlock()
-	return r.metrics[name]
+	m := r.metrics[name]
+	r.mutex.Unlock()
+	return m
 }
 
 // Gets an existing metric or creates and registers a new one. Threadsafe
@@ -137,11 +138,11 @@ func (r *StandardRegistry) register(name string, i interface{}) error {
 
 func (r *StandardRegistry) registered() map[string]interface{} {
 	r.mutex.Lock()
-	defer r.mutex.Unlock()
 	metrics := make(map[string]interface{}, len(r.metrics))
 	for name, i := range r.metrics {
 		metrics[name] = i
 	}
+	r.mutex.Unlock()
 	return metrics
 }
 

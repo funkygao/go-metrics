@@ -79,13 +79,14 @@ func (g *StandardGaugeFloat64) Snapshot() GaugeFloat64 {
 // Update updates the gauge's value.
 func (g *StandardGaugeFloat64) Update(v float64) {
 	g.mutex.Lock()
-	defer g.mutex.Unlock()
 	g.value = v
+	g.mutex.Unlock()
 }
 
 // Value returns the gauge's current value.
 func (g *StandardGaugeFloat64) Value() float64 {
 	g.mutex.Lock()
-	defer g.mutex.Unlock()
-	return g.value
+	r := g.value
+	g.mutex.Unlock()
+	return r
 }

@@ -189,11 +189,12 @@ func (t *StandardTimer) RateMean() float64 {
 // Snapshot returns a read-only copy of the timer.
 func (t *StandardTimer) Snapshot() Timer {
 	t.mutex.Lock()
-	defer t.mutex.Unlock()
-	return &TimerSnapshot{
+	r := &TimerSnapshot{
 		histogram: t.histogram.Snapshot().(*HistogramSnapshot),
 		meter:     t.meter.Snapshot().(*MeterSnapshot),
 	}
+	t.mutex.Unlock()
+	return r
 }
 
 // StdDev returns the standard deviation of the values in the sample.
@@ -216,17 +217,17 @@ func (t *StandardTimer) Time(f func()) {
 // Record the duration of an event.
 func (t *StandardTimer) Update(d time.Duration) {
 	t.mutex.Lock()
-	defer t.mutex.Unlock()
 	t.histogram.Update(int64(d))
 	t.meter.Mark(1)
+	t.mutex.Unlock()
 }
 
 // Record the duration of an event that started at a time and ends now.
 func (t *StandardTimer) UpdateSince(ts time.Time) {
 	t.mutex.Lock()
-	defer t.mutex.Unlock()
 	t.histogram.Update(int64(time.Since(ts)))
 	t.meter.Mark(1)
+	t.mutex.Unlock()
 }
 
 // Variance returns the variance of the values in the sample.
